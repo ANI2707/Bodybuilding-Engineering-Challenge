@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { supabase } from '@/utils/supabse';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -57,42 +59,74 @@ export default function FactoryPage() {
   const [userName, setUserName] = useState<string>('Anonymous');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Fetch user and leaderboard data on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      
-      // Get current user
-      const { data: { session } } = await supabase.auth.getSession();
+ useEffect(() => {
+
+    // Check user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
-      
-      // Set user name
-      if (session?.user) {
+       if (session?.user) {
         setUserName(session.user.email?.split('@')[0] || 'User');
-      }
-      
-      // Fetch leaderboard data
-      await fetchLeaderboard();
-      
-      setIsLoading(false);
-    };
-    
-    fetchData();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null);
-      if (session?.user) {
-        setUserName(session.user.email?.split('@')[0] || 'User');
-      } else {
-        setUserName('Anonymous');
       }
     });
-    
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, []); 
+
+  useEffect(()=>{
+    const fetchData = async() =>{
+      setIsLoading(true)
+      await fetchLeaderboard();
+      setIsLoading(false)
+    }
+    fetchData();
+  },[])
+
+  // Fetch user and leaderboard data on component mount
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setIsLoading(true);
+      
+  //     // Get current user
+  //     const { data: { session } } = await supabase.auth.getSession();
+  //     setUser(session?.user || null);
+      
+  //     // Set user name
+  //     if (session?.user) {
+  //       setUserName(session.user.email?.split('@')[0] || 'User');
+  //     }
+      
+  //     // Fetch leaderboard data
+  //     await fetchLeaderboard();
+      
+  //     setIsLoading(false);
+  //   };
+    
+  //   fetchData();
+    
+  //   // Subscribe to auth changes
+  //   const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+  //     setUser(session?.user || null);
+  //     if (session?.user) {
+  //       setUserName(session.user.email?.split('@')[0] || 'User');
+  //     } else {
+  //       setUserName('Anonymous');
+  //     }
+  //   });
+    
+  //   return () => {
+  //     authListener?.subscription.unsubscribe();
+  //   };
+  // }, []);
 
   // Fetch leaderboard data from Supabase
   const fetchLeaderboard = async () => {
@@ -143,6 +177,12 @@ export default function FactoryPage() {
   };
 
   const calculateResults = async () => {
+
+      if (!user) {
+        toast.error('You need to be logged in to get advice.');
+        return;
+      }
+    
     let totalProtein = 0;
     let totalEnergy = 0;
 
