@@ -301,9 +301,9 @@ export default function FactoryPage() {
             {/* Display current user */}
             <div className="mb-4 text-sm text-gray-400">
               Playing as: <span className="font-semibold">{userName}</span>
-              {!user && (
+              {/* {!user && (
                 <span className="ml-2 text-gray-500">(Sign in to save your name on the leaderboard)</span>
-              )}
+              )} */}
             </div>
             
             <button
