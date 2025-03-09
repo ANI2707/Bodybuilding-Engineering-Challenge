@@ -179,7 +179,7 @@ export default function FactoryPage() {
   const calculateResults = async () => {
 
       if (!user) {
-        toast.error('You need to be logged in to get advice.');
+        toast.error('You need to be logged in to get Factory Results.');
         return;
       }
     
